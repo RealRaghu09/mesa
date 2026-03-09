@@ -139,18 +139,6 @@ class AltairBackend(AbstractRenderer):
                 if aps.x is None and aps.y is None:
                     aps.x, aps.y = self._get_agent_pos(agent, space)
 
-                # Icon support is currently only implemented for the Matplotlib
-                # backend. Warn users if they set an icon when using Altair so
-                # that the silent fallback to marker shapes is visible.
-                if getattr(aps, "icon", None) is not None:
-                    warnings.warn(
-                        "AgentPortrayalStyle.icon is currently only supported by the "
-                        "Matplotlib backend. The Altair backend will ignore the icon "
-                        "and fall back to marker-based shapes.",
-                        UserWarning,
-                        stacklevel=2,
-                    )
-
             arguments["loc"].append((aps.x, aps.y))
 
             size_to_collect = aps.size if aps.size is not None else default_size

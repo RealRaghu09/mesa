@@ -1,4 +1,5 @@
 # noqa: D100
+import os
 import warnings
 from dataclasses import fields
 
@@ -17,7 +18,6 @@ from mesa.discrete_space import (
     OrthogonalVonNeumannGrid,
 )
 from mesa.visualization.backends.abstract_renderer import AbstractRenderer
-from mesa.visualization.icons import get_icon_image
 
 OrthogonalGrid = OrthogonalMooreGrid | OrthogonalVonNeumannGrid
 HexGrid = mesa.discrete_space.HexGrid
@@ -160,15 +160,7 @@ class MatplotlibBackend(AbstractRenderer):
             size_to_collect = aps.size or default_size or class_default_size
             arguments["s"].append(size_to_collect)
             arguments["c"].append(aps.color)
-
-            # If an icon is specified, encode it in the marker so that
-            # draw_agents can render it as an image marker.
-            icon_name = getattr(aps, "icon", None)
-            if icon_name:
-                marker_value = ("__icon__", icon_name)
-            else:
-                marker_value = aps.marker
-            arguments["marker"].append(marker_value)
+            arguments["marker"].append(aps.marker)
             arguments["zorder"].append(aps.zorder)
             arguments["alpha"].append(aps.alpha)
             if aps.edgecolors is not None:
@@ -251,7 +243,7 @@ class MatplotlibBackend(AbstractRenderer):
         regular_markers = set()
 
         for mark in unique_markers:
-            if isinstance(mark, tuple) and len(mark) == 2 and mark[0] == "__icon__":
+            if isinstance(mark, str | os.PathLike) and os.path.isfile(mark):
                 image_markers.add(mark)
             else:
                 regular_markers.add(mark)
@@ -260,13 +252,7 @@ class MatplotlibBackend(AbstractRenderer):
 
         for mark in image_markers:
             if mark not in image_cache:
-                if isinstance(mark, tuple) and mark[0] == "__icon__":
-                    _, icon_name = mark
-                    # Use a base size of 32px; actual size is further scaled by s
-                    image = get_icon_image(icon_name, size=32)
-                else:
-                    # Fallback: treat as a path-like marker if ever used again
-                    image = Image.open(mark)
+                image = Image.open(mark)
                 base_zoom = self._get_zoom_factor(self.ax, image)
                 image_cache[mark] = {
                     "image": image,
